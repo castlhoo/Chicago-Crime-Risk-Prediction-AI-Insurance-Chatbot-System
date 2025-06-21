@@ -3,6 +3,9 @@
 
 ## **🏠 Phase 1: Foundation - CPTED Web Application**
 
+https://github.com/castlhoo/Apartment_Risk_Prediction_Program   
+https://github.com/castlhoo/Chicago-Crime-Clustering-Analysis
+
 Our initial project developed a CPTED-based Flask web application for residential crime risk assessment. This foundation tool evaluated apartment complexes using environmental design principles, scoring accessibility and surveillance factors (1-5 scale) alongside local burglary data to help insurance companies make targeted policy recommendations.
 
 ---
