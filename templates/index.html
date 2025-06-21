@@ -1,0 +1,672 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Chicago Crime Risk Predictor</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #F2F4F6;
+        }
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #F2F4F6;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #8B95A1;
+            border-radius: 4px;
+        }
+        
+        .chat-container {
+            height: 500px;
+            overflow-y: auto;
+        }
+        
+        .message {
+            animation: fadeIn 0.3s ease-in;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .typing-indicator {
+            display: inline-block;
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background-color: #8B95A1;
+            animation: pulse 1.5s ease-in-out infinite;
+        }
+        
+        .typing-indicator:nth-child(2) { animation-delay: 0.2s; }
+        .typing-indicator:nth-child(3) { animation-delay: 0.4s; }
+        
+        @keyframes pulse {
+            0%, 60%, 100% { transform: scale(1); opacity: 0.4; }
+            30% { transform: scale(1.2); opacity: 1; }
+        }
+
+        /* Enhanced table styles with better column sizing */
+        .insurance-table, .risk-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 10px;
+            margin: 10px 0;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            border-radius: 8px;
+            overflow: hidden;
+            table-layout: fixed; /* Fixed layout for better control */
+        }
+        
+        .insurance-table th, .risk-table th {
+            background: linear-gradient(135deg, #6b73ff, #5a67d8);
+            color: white;
+            border: none;
+            padding: 8px 5px;
+            text-align: left;
+            font-weight: 600;
+            font-size: 10px;
+        }
+        
+        /* Specific column widths for insurance table */
+        .insurance-table th:nth-child(1) { width: 25%; } /* Company */
+        .insurance-table th:nth-child(2) { width: 35%; } /* Product Details */
+        .insurance-table th:nth-child(3) { width: 25%; } /* Premium Range */
+        .insurance-table th:nth-child(4) { width: 15%; } /* Get Quote */
+        
+        .insurance-table td, .risk-table td {
+            border: 1px solid #e8e8e8;
+            padding: 6px 4px;
+            vertical-align: top;
+            background-color: white;
+            word-wrap: break-word;
+        }
+        
+        .insurance-table tr:nth-child(even), .risk-table tr:nth-child(even) {
+            background-color: #f8f9fa;
+        }
+        
+        .insurance-table tr:hover, .risk-table tr:hover {
+            background-color: #edf2f7;
+            transition: background-color 0.2s;
+        }
+        
+        .insurance-table a {
+            color: #5a67d8;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 8px;
+            padding: 3px 6px;
+            background-color: #edf2f7;
+            border-radius: 4px;
+            border: 1px solid #5a67d8;
+            display: block;
+            text-align: center;
+            white-space: nowrap;
+        }
+        
+        .insurance-table a:hover {
+            background-color: #5a67d8;
+            color: white;
+        }
+        
+        .risk-high {
+            background-color: #ffebee !important;
+            color: #c62828;
+            font-weight: bold;
+        }
+        
+        .risk-medium {
+            background-color: #fff3e0 !important;
+            color: #ef6c00;
+            font-weight: bold;
+        }
+        
+        .risk-low {
+            background-color: #e8f5e8 !important;
+            color: #2e7d32;
+            font-weight: bold;
+        }
+        
+        .reason-box {
+            margin-top: 15px;
+            padding: 10px;
+            background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+            border-radius: 8px;
+            font-size: 11px;
+            border-left: 4px solid #6b73ff;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .summary-header {
+            background: linear-gradient(135deg, #6b73ff, #5a67d8);
+            color: white;
+            padding: 10px;
+            border-radius: 8px 8px 0 0;
+            font-weight: bold;
+            text-align: center;
+            margin-bottom: 0;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex items-center justify-center p-4">
+    <div class="w-full max-w-2xl bg-white rounded-2xl overflow-hidden shadow-xl border border-gray-100">
+        <!-- Header -->
+        <div class="bg-white border-b border-gray-100 p-6 text-center">
+            <h1 class="text-2xl font-bold text-[#333D4B] tracking-tight">
+                InsureWise
+            </h1>
+            <p class="text-[#6B7684] mt-2 text-sm">
+                Smart Risk Analysis & Insurance Recommendations
+            </p>
+        </div>
+
+        <!-- Chat Container -->
+        <div id="chatContainer" class="chat-container bg-[#F2F4F6] p-4 space-y-4">
+            <!-- Initial Bot Message -->
+            <div class="message flex items-start space-x-3">
+                <div class="w-8 h-8 bg-[#0051FF] rounded-full flex items-center justify-center flex-shrink-0">
+                    <svg class="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M18 10c0 3.866-3.582 7-8 7a8.841 8.841 0 01-4.083-.98L2 17l1.338-3.123C2.493 12.767 2 11.434 2 10c0-3.866 3.582-7 8-7s8 3.134 8 7zM7 9H5v2h2V9zm8 0h-2v2h2V9zM9 9h2v2H9V9z" clip-rule="evenodd"/>
+                    </svg>
+                </div>
+                <div class="bg-white rounded-lg p-3 shadow-sm border border-gray-100 max-w-md">
+                    <p class="text-sm text-[#333D4B]">Hello! Welcome to InsureWise - your intelligent risk analysis and insurance recommendation service. I'll help you analyze your neighborhood crime risk and find the perfect insurance coverage for your needs!</p>
+                </div>
+            </div>
+
+            <div class="message flex items-start space-x-3">
+                <div class="w-8 h-8 bg-[#0051FF] rounded-full flex items-center justify-center flex-shrink-0">
+                    <svg class="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M18 10c0 3.866-3.582 7-8 7a8.841 8.841 0 01-4.083-.98L2 17l1.338-3.123C2.493 12.767 2 11.434 2 10c0-3.866 3.582-7 8-7s8 3.134 8 7zM7 9H5v2h2V9zm8 0h-2v2h2V9zM9 9h2v2H9V9z" clip-rule="evenodd"/>
+                    </svg>
+                </div>
+                <div class="bg-white rounded-lg p-3 shadow-sm border border-gray-100 max-w-md">
+                    <p class="text-sm text-[#333D4B]">First, could you please tell me your name?</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Input Area -->
+        <div class="bg-white border-t border-gray-100 p-4">
+            <div class="flex space-x-2">
+                <input 
+                    type="text" 
+                    id="messageInput" 
+                    placeholder="Type your message here..."
+                    class="flex-1 px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm text-[#333D4B] placeholder-[#8B95A1]"
+                >
+                <button 
+                    id="sendButton"
+                    class="bg-[#0051FF] text-white px-4 py-3 rounded-lg hover:bg-[#003AD4] transition duration-300 flex items-center justify-center active:scale-[0.98]"
+                >
+                    <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                        <path d="M10.894 2.553a1 1 0 00-1.788 0l-7 14a1 1 0 001.169 1.409l5-1.429A1 1 0 009 15.571V11a1 1 0 112 0v4.571a1 1 0 00.725.962l5 1.429a1 1 0 001.17-1.409l-7-14z"/>
+                    </svg>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Chatbot state management
+        const chatState = {
+            step: 'name', // name -> region -> community_area -> housing_type -> complete
+            userData: {},
+            currentOptions: []
+        };
+
+        // Chicago data options with region mapping
+        const OPTIONS_DATA = {
+            regions: [
+                "Central", "Far North Side", "Far Southeast Side", "Far Southwest Side",
+                "North Side", "Northwest Side", "South Side", "Southwest Side", "West Side"
+            ],
+            // Community areas mapped by region
+            community_areas_by_region: {
+                "Central": [
+                    "LOOP", "NEAR NORTH SIDE", "NEAR SOUTH SIDE"
+                ],
+                "Far North Side": [
+                    "ROGERS PARK", "WEST RIDGE", "UPTOWN", "LINCOLN SQUARE", 
+                    "EDISON PARK", "NORWOOD PARK", "JEFFERSON PARK", "FOREST GLEN", 
+                    "NORTH PARK", "ALBANY PARK", "EDGEWATER"
+                ],
+                "Far Southeast Side": [
+                    "AVALON PARK", "SOUTH CHICAGO", "BURNSIDE", "CALUMET HEIGHTS", 
+                    "ROSELAND", "PULLMAN", "SOUTH DEERING", "EAST SIDE", "HEGEWISCH"
+                ],
+                "Far Southwest Side": [
+                    "GARFIELD RIDGE", "ARCHER HEIGHTS", "BRIGHTON PARK", "MCKINLEY PARK",
+                    "NEW CITY", "WEST ELSDON", "GAGE PARK", "CLEARING", "WEST LAWN", 
+                    "CHICAGO LAWN", "WEST ENGLEWOOD", "ENGLEWOOD"
+                ],
+                "North Side": [
+                    "NORTH CENTER", "LAKE VIEW", "LINCOLN PARK", "PORTAGE PARK", 
+                    "IRVING PARK", "AVONDALE", "LOGAN SQUARE"
+                ],
+                "Northwest Side": [
+                    "DUNNING", "MONTCLARE", "BELMONT CRAGIN", "HERMOSA"
+                ],
+                "South Side": [
+                    "DOUGLAS", "OAKLAND", "FULLER PARK", "GRAND BOULEVARD", "KENWOOD",
+                    "WASHINGTON PARK", "HYDE PARK", "WOODLAWN", "SOUTH SHORE", "CHATHAM",
+                    "GREATER GRAND CROSSING", "ASHBURN", "AUBURN GRESHAM", "BEVERLY", 
+                    "WASHINGTON HEIGHTS", "MOUNT GREENWOOD", "MORGAN PARK"
+                ],
+                "Southwest Side": [
+                    "LOWER WEST SIDE", "ARMOUR SQUARE", "BRIDGEPORT"
+                ],
+                "West Side": [
+                    "HUMBOLDT PARK", "WEST TOWN", "AUSTIN", "WEST GARFIELD PARK", 
+                    "EAST GARFIELD PARK", "NEAR WEST SIDE", "NORTH LAWNDALE", 
+                    "SOUTH LAWNDALE", "OHARE"
+                ]
+            },
+            housing_types: [
+                { value: "RESIDENTIAL", label: "Residential (Apartment/House)" },
+                { value: "COMMERCIAL", label: "Commercial (Store/Office)" },
+                { value: "TRANSPORT", label: "Transportation Related" },
+                { value: "PUBLIC", label: "Public Facility" },
+                { value: "EDUCATION", label: "Educational Facility" },
+                { value: "MEDICAL", label: "Medical Facility" },
+                { value: "GOVERNMENT", label: "Government Building" },
+                { value: "INDUSTRIAL", label: "Industrial Facility" },
+                { value: "RECREATIONAL", label: "Recreational" },
+                { value: "OTHER", label: "Other" }
+            ]
+        };
+
+        // DOM elements
+        const chatContainer = document.getElementById('chatContainer');
+        const messageInput = document.getElementById('messageInput');
+        const sendButton = document.getElementById('sendButton');
+
+        // Add message function
+        function addMessage(content, isUser = false) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message flex items-start space-x-3 ${isUser ? 'justify-end' : ''}`;
+            
+            if (isUser) {
+                messageDiv.innerHTML = `
+                    <div class="bg-[#0051FF] text-white rounded-lg p-3 shadow-sm max-w-md">
+                        <p class="text-sm">${content}</p>
+                    </div>
+                `;
+            } else {
+                messageDiv.innerHTML = `
+                    <div class="w-8 h-8 bg-[#0051FF] rounded-full flex items-center justify-center flex-shrink-0">
+                        <svg class="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M18 10c0 3.866-3.582 7-8 7a8.841 8.841 0 01-4.083-.98L2 17l1.338-3.123C2.493 12.767 2 11.434 2 10c0-3.866 3.582-7 8-7s8 3.134 8 7zM7 9H5v2h2V9zm8 0h-2v2h2V9zM9 9h2v2H9V9z" clip-rule="evenodd"/>
+                        </svg>
+                    </div>
+                    <div class="bg-white rounded-lg p-3 shadow-sm border border-gray-100 max-w-lg">
+                        <div class="text-sm text-[#333D4B]">${content}</div>
+                    </div>
+                `;
+            }
+            
+            chatContainer.appendChild(messageDiv);
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+
+        // Add option buttons
+        function addOptionButtons(options, isHousingType = false) {
+            const optionsDiv = document.createElement('div');
+            optionsDiv.className = 'message flex items-start space-x-3';
+            
+            const buttonsHtml = options.map(option => {
+                const displayText = isHousingType ? option.label : option;
+                const value = isHousingType ? option.value : option;
+                return `<button onclick="selectOption('${value}')" class="bg-white border border-[#0051FF] text-[#0051FF] px-3 py-2 rounded-lg text-xs hover:bg-[#0051FF] hover:text-white transition duration-200 m-1">${displayText}</button>`;
+            }).join('');
+            
+            optionsDiv.innerHTML = `
+                <div class="w-8 h-8"></div>
+                <div class="flex flex-wrap max-w-lg">
+                    ${buttonsHtml}
+                </div>
+            `;
+            
+            chatContainer.appendChild(optionsDiv);
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+
+        // Select option function
+        function selectOption(value) {
+            // Display selected option as user message
+            let displayText = value;
+            if (chatState.step === 'housing_type') {
+                const housing = OPTIONS_DATA.housing_types.find(h => h.value === value);
+                displayText = housing ? housing.label : value;
+            }
+            
+            addMessage(displayText, true);
+            
+            // Remove buttons
+            const buttons = document.querySelectorAll('button[onclick^="selectOption"]');
+            buttons.forEach(btn => btn.parentElement.parentElement.remove());
+            
+            // Process input
+            processUserInput(value);
+        }
+
+        // Process user input based on current conversation step
+        async function processUserInput(input) {
+            switch (chatState.step) {
+                case 'name':
+                    chatState.userData.name = input;
+                    chatState.step = 'region';
+                    setTimeout(() => {
+                        addMessage(`Nice to meet you, ${input}!<br><br>Which Chicago region do you live in?`);
+                        addOptionButtons(OPTIONS_DATA.regions);
+                    }, 500);
+                    break;
+                    
+                case 'region':
+                    chatState.userData.region = input;
+                    chatState.step = 'community_area';
+                    setTimeout(() => {
+                        // Get community areas for the selected region
+                        const regionCommunityAreas = OPTIONS_DATA.community_areas_by_region[input] || [];
+                        
+                        if (regionCommunityAreas.length > 0) {
+                            addMessage(`Great! You live in ${input} area.<br><br>Now please select your specific community area within ${input}:`);
+                            addOptionButtons(regionCommunityAreas);
+                        } else {
+                            // Fallback if region mapping not found
+                            addMessage(`Great! You live in ${input} area.<br><br>Could you please select your specific community area?`);
+                            addOptionButtons(Object.values(OPTIONS_DATA.community_areas_by_region).flat().slice(0, 15));
+                        }
+                    }, 500);
+                    break;
+                    
+                case 'community_area':
+                    chatState.userData.community_area = input;
+                    chatState.step = 'housing_type';
+                    setTimeout(() => {
+                        addMessage(`Perfect! ${input.replace('_', ' ')} community area.<br><br>What type of housing/property are you living in?`);
+                        addOptionButtons(OPTIONS_DATA.housing_types, true);
+                    }, 500);
+                    break;
+                    
+                case 'housing_type':
+                    chatState.userData.housing_type = input;
+                    chatState.step = 'processing';
+                    
+                    // Loading message
+                    setTimeout(() => {
+                        addMessage(`Information collection completed!<br><br>AI is analyzing crime risk and searching for suitable insurance products...`);
+                        addTypingIndicator();
+                    }, 500);
+                    
+                    // Call ML API and GPT recommendation
+                    await getPredictionAndRecommendation();
+                    break;
+            }
+            
+            messageInput.value = '';
+        }
+
+        // Add typing indicator animation
+        function addTypingIndicator() {
+            const typingDiv = document.createElement('div');
+            typingDiv.className = 'message flex items-start space-x-3';
+            typingDiv.id = 'typingIndicator';
+            
+            typingDiv.innerHTML = `
+                <div class="w-8 h-8 bg-[#0051FF] rounded-full flex items-center justify-center flex-shrink-0">
+                    <svg class="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M18 10c0 3.866-3.582 7-8 7a8.841 8.841 0 01-4.083-.98L2 17l1.338-3.123C2.493 12.767 2 11.434 2 10c0-3.866 3.582-7 8-7s8 3.134 8 7zM7 9H5v2h2V9zm8 0h-2v2h2V9zM9 9h2v2H9V9z" clip-rule="evenodd"/>
+                    </svg>
+                </div>
+                <div class="bg-white rounded-lg p-3 shadow-sm border border-gray-100">
+                    <div class="flex space-x-1">
+                        <div class="typing-indicator"></div>
+                        <div class="typing-indicator"></div>
+                        <div class="typing-indicator"></div>
+                    </div>
+                </div>
+            `;
+            
+            chatContainer.appendChild(typingDiv);
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+
+        // Call ML API and GPT recommendation services
+        async function getPredictionAndRecommendation() {
+            try {
+                // ML API call
+                const mlResponse = await fetch('/predict', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(chatState.userData)
+                });
+                
+                const mlData = await mlResponse.json();
+                
+                if (mlData.status === 'success') {
+                    // GPT recommendation call
+                    const gptResponse = await fetch('/gpt_recommend', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            user_data: chatState.userData,
+                            crime_predictions: mlData.predictions
+                        })
+                    });
+                    
+                    const recommendation = await gptResponse.json();
+                    
+                    // Remove typing indicator
+                    const typingIndicator = document.getElementById('typingIndicator');
+                    if (typingIndicator) typingIndicator.remove();
+                    
+                    // Display analysis results
+                    displayResults(mlData.predictions, recommendation);
+                } else {
+                    throw new Error('ML API Error');
+                }
+                
+            } catch (error) {
+                console.error('Error:', error);
+                const typingIndicator = document.getElementById('typingIndicator');
+                if (typingIndicator) typingIndicator.remove();
+                
+                addMessage('Sorry, an error occurred during analysis. Please try again.');
+            }
+        }
+
+        // Display results function with enhanced table formatting
+        function displayResults(predictions, recommendation) {
+            // Crime risk results in table format
+            setTimeout(() => {
+                const riskTableHTML = createRiskAnalysisTable(predictions);
+                addMessage(`<div class="summary-header">${chatState.userData.name}'s Crime Risk Analysis Results</div>${riskTableHTML}`);
+            }, 1000);
+            
+            // Insurance recommendations - Clean table format  
+            setTimeout(() => {
+                if (recommendation.message) {
+                    const cleanedMessage = formatInsuranceRecommendation(recommendation.message);
+                    addMessage(`<div class="summary-header">Personalized Insurance Recommendations</div>${cleanedMessage}`);
+                } else {
+                    addMessage('Insurance product recommendations are being prepared. Please wait a moment!');
+                }
+            }, 3000);
+            
+            // Closing message
+            setTimeout(() => {
+                addMessage(`Analysis completed! If you have any additional questions, feel free to ask anytime.<br><br><strong>Need detailed consultation?</strong><br>Contact our insurance specialists for personalized quotes and coverage details.`);
+                chatState.step = 'complete';
+            }, 6000);
+        }
+
+        // Create risk analysis table
+        function createRiskAnalysisTable(predictions) {
+            const propertyType = OPTIONS_DATA.housing_types.find(h => h.value === chatState.userData.housing_type)?.label;
+            
+            let tableHTML = `
+                <div style="margin: 10px 0;">
+                    <table class="risk-table">
+                        <thead>
+                            <tr>
+                                <th>Location Info</th>
+                                <th>Details</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong>Region</strong></td>
+                                <td>${chatState.userData.region}</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Community Area</strong></td>
+                                <td>${chatState.userData.community_area.replace('_', ' ')}</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Property Type</strong></td>
+                                <td>${propertyType}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    
+                    <table class="risk-table" style="margin-top: 15px;">
+                        <thead>
+                            <tr>
+                                <th>Rank</th>
+                                <th>Crime Type</th>
+                                <th>Probability</th>
+                                <th>Risk Level</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+            `;
+            
+            predictions.top3_crimes.forEach((crime, index) => {
+                const riskClass = crime.risk_level === 'HIGH' ? 'risk-high' : 
+                                 crime.risk_level === 'MEDIUM' ? 'risk-medium' : 'risk-low';
+                
+                tableHTML += `
+                    <tr>
+                        <td><strong>#${index + 1}</strong></td>
+                        <td><strong>${crime.crime_type}</strong> Crime</td>
+                        <td>${crime.percentage}%</td>
+                        <td class="${riskClass}">${crime.risk_level} RISK</td>
+                    </tr>
+                `;
+            });
+            
+            tableHTML += `
+                        </tbody>
+                    </table>
+                </div>
+            `;
+            
+            return tableHTML;
+        }
+
+        // Format GPT response into enhanced table structure for 5 recommendations
+        function formatInsuranceRecommendation(message) {
+            // Parse GPT response to extract structured data for 5 recommendations
+            const recommendations = [];
+            
+            // Extract all recommendations (1-5)
+            for (let i = 1; i <= 5; i++) {
+                const pattern = new RegExp(`\\*\\*RECOMMENDATION ${i}:\\*\\*(.*?)(?=\\*\\*RECOMMENDATION ${i + 1}:|\\*\\*WHY|$)`, 's');
+                const match = message.match(pattern);
+                if (match) {
+                    recommendations.push(match[1]);
+                }
+            }
+            
+            const reasonMatch = message.match(/\*\*WHY THESE RECOMMENDATIONS:\*\*(.*?)$/s);
+            
+            let formatted = '';
+            
+            // Create enhanced table structure with website links
+            formatted += `<div style="margin: 10px 0;">`;
+            formatted += `<table class="insurance-table">`;
+            formatted += `<thead><tr>`;
+            formatted += `<th>Company</th>`;
+            formatted += `<th>Product Details</th>`;
+            formatted += `<th>Premium</th>`;
+            formatted += `<th>Quote</th>`;
+            formatted += `</tr></thead><tbody>`;
+            
+            // Process each recommendation
+            recommendations.forEach((rec, index) => {
+                if (rec) {
+                    const company = extractField(rec, 'Company');
+                    const product = extractField(rec, 'Product');
+                    const coverage = extractField(rec, 'Coverage');
+                    const premium = extractField(rec, 'Premium');
+                    const contact = extractField(rec, 'Contact');
+                    const website = extractField(rec, 'Website');
+                    
+                    // Create clickable website link with shorter text
+                    const websiteLink = website && website !== 'Not specified' ? 
+                        `<a href="${website}" target="_blank">Quote</a>` : 
+                        'N/A';
+                    
+                    formatted += `<tr>`;
+                    formatted += `<td><strong>${company}</strong><br><small style="color: #666;">${contact}</small></td>`;
+                    formatted += `<td><strong style="color: #5a67d8;">${product}</strong><br><small>${coverage}</small></td>`;
+                    formatted += `<td><strong style="color: #2e7d32;">${premium}</strong></td>`;
+                    formatted += `<td style="text-align: center;">${websiteLink}</td>`;
+                    formatted += `</tr>`;
+                }
+            });
+            
+            formatted += `</tbody></table></div>`;
+            
+            // Add reasoning with enhanced styling
+            if (reasonMatch) {
+                const reason = reasonMatch[1].trim();
+                formatted += `<div class="reason-box">`;
+                formatted += `<strong style="color: #5a67d8;">Why these recommendations:</strong><br>${reason}`;
+                formatted += `</div>`;
+            }
+            
+            return formatted;
+        }
+        
+        // Helper function to extract specific fields from GPT response
+        function extractField(text, fieldName) {
+            const regex = new RegExp(`${fieldName}:\\s*([^\\n]+)`, 'i');
+            const match = text.match(regex);
+            return match ? match[1].trim() : 'Not specified';
+        }
+
+        // Event listeners for user input
+        messageInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                sendMessage();
+            }
+        });
+
+        sendButton.addEventListener('click', sendMessage);
+
+        function sendMessage() {
+            const message = messageInput.value.trim();
+            if (!message) return;
+            
+            if (chatState.step === 'complete') {
+                // General conversation mode after analysis completion
+                addMessage(message, true);
+                addMessage('For additional analysis or information about other areas, please refresh the page to start over!');
+            } else if (chatState.step !== 'processing') {
+                addMessage(message, true);
+                processUserInput(message);
+            }
+        }
+    </script>
+</body>
+</html>
