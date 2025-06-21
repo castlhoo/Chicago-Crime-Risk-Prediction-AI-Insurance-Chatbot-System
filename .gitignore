@@ -3,7 +3,8 @@ __pycache__/
 *.pyc
 .env
 *.mp4
+*.csv
 *.pkl
+*.dll
 chicago_project_complete.mp4
 Chicago_processing.csv
-*.dll
