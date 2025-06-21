@@ -1,5 +1,5 @@
 # 🚔 Chicago Crime Risk Prediction & AI Insurance Chatbot System
-**| From Environmental Crime Prevention to AI-Powered Analytics: Project Evolution |**
+## **| From Environmental Crime Prevention to AI-Powered Analytics: Project Evolution |**
 
 ## **🏠 Phase 1: Foundation - CPTED Web Application**
 
@@ -274,7 +274,7 @@ https://github.com/user-attachments/assets/cdc63ed3-f6ca-4ce7-adc1-6d1d1adab467
 - Enabled data-driven safety decisions for families and communities
 - Built technology platform that bridges complex data science with everyday safety needs
 
-This project demonstrates how advanced data science can create tangible social value while building a sustainable business model around public safety and community protection.
+### This project demonstrates how advanced data science can create tangible social value while building a sustainable business model around public safety and community protection.
 ---
 
 ## 🚀 Technical Implementation
