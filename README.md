@@ -1,4 +1,24 @@
 # 🚔 Chicago Crime Risk Prediction & AI Insurance Chatbot System
+**| From Environmental Crime Prevention to AI-Powered Analytics: Project Evolution |**
+
+## **🏠 Phase 1: Foundation - CPTED Web Application**
+
+Our initial project developed a CPTED-based Flask web application for residential crime risk assessment. This foundation tool evaluated apartment complexes using environmental design principles, scoring accessibility and surveillance factors (1-5 scale) alongside local burglary data to help insurance companies make targeted policy recommendations.
+
+---
+
+## **🚔 Phase 2: Advanced Evolution - Chicago Crime Risk Prediction & AI Insurance Chatbot**
+
+Building on our CPTED foundation, we developed a comprehensive end-to-end data science project that transforms Chicago crime data (237K+ records) into an intelligent AI-powered insurance chatbot. Using Apache Spark for big data processing and advanced ML algorithms, this production-ready system predicts crime risks with 89.96% accuracy and provides personalized insurance recommendations through GPT-4 integration.
+
+**🌍 Mission**: Democratize access to crime risk information and help people find insurance products that truly protect them by bridging the gap between complex crime analytics and everyday safety decisions.
+
+---
+
+## **🔄 Evolution Summary**
+
+#### From targeted environmental assessment to comprehensive AI-powered crime analytics - this project evolution demonstrates how foundational crime prevention tools can scale into sophisticated systems that serve broader community safety and insurance needs.
+---
 
 ## 📌 Project Overview
 
